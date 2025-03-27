@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Image, MessageCircle, Users, User, Settings, ChevronLeft, LogOut, Edit, Save } from "lucide-react";
+import { Camera, Image, MessageCircle, Users, User, Settings, ChevronLeft, LogOut, Edit, Save, Check } from "lucide-react";
 import MainFeature from "../components/MainFeature";
 import ProfileEdit from "../components/ProfileEdit";
 import ProfileStats from "../components/ProfileStats";
 import ThemeSettings from "../components/ThemeSettings";
 import SavedContent from "../components/SavedContent";
+import MyStories from "../components/MyStories";
+import Friends from "../components/Friends";
+import Privacy from "../components/Privacy";
 
 const Home = ({ darkMode, setDarkMode }) => {
   const [activeTab, setActiveTab] = useState("camera");
@@ -31,8 +34,9 @@ const Home = ({ darkMode, setDarkMode }) => {
   ]);
 
   // Profile section state
-  const [profileSection, setProfileSection] = useState("main"); // main, edit, stats, settings, saved
+  const [profileSection, setProfileSection] = useState("main"); // main, edit, stats, settings, saved, myStories, friends, privacy
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showSavedToast, setShowSavedToast] = useState(false);
 
   const formatTime = (date) => {
     const now = new Date();
@@ -56,6 +60,14 @@ const Home = ({ darkMode, setDarkMode }) => {
     setStories(updatedStories);
     
     setProfileSection("main");
+    showToast();
+  };
+
+  const showToast = () => {
+    setShowSavedToast(true);
+    setTimeout(() => {
+      setShowSavedToast(false);
+    }, 3000);
   };
 
   return (
@@ -343,6 +355,7 @@ const Home = ({ darkMode, setDarkMode }) => {
                       <motion.div 
                         className="p-4 bg-white dark:bg-surface-800 rounded-xl shadow-sm"
                         whileHover={{ y: -2 }}
+                        onClick={() => setProfileSection("myStories")}
                       >
                         <h3 className="font-semibold mb-2">My Stories</h3>
                         <p className="text-sm text-surface-500">Create and manage your stories</p>
@@ -351,6 +364,7 @@ const Home = ({ darkMode, setDarkMode }) => {
                       <motion.div 
                         className="p-4 bg-white dark:bg-surface-800 rounded-xl shadow-sm"
                         whileHover={{ y: -2 }}
+                        onClick={() => setProfileSection("friends")}
                       >
                         <h3 className="font-semibold mb-2">Friends</h3>
                         <p className="text-sm text-surface-500">{user.friends.length} friends</p>
@@ -359,6 +373,7 @@ const Home = ({ darkMode, setDarkMode }) => {
                       <motion.div 
                         className="p-4 bg-white dark:bg-surface-800 rounded-xl shadow-sm"
                         whileHover={{ y: -2 }}
+                        onClick={() => setProfileSection("privacy")}
                       >
                         <h3 className="font-semibold mb-2">Privacy</h3>
                         <p className="text-sm text-surface-500">Manage your privacy settings</p>
@@ -514,6 +529,75 @@ const Home = ({ darkMode, setDarkMode }) => {
                     <SavedContent />
                   </motion.div>
                 )}
+
+                {profileSection === "myStories" && (
+                  <motion.div
+                    key="profile-stories"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="p-4"
+                  >
+                    <div className="flex items-center mb-4">
+                      <motion.button
+                        className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 mr-2"
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setProfileSection("main")}
+                      >
+                        <ChevronLeft size={20} />
+                      </motion.button>
+                      <h2 className="text-xl font-bold">My Stories</h2>
+                    </div>
+                    
+                    <MyStories onClose={() => setProfileSection("main")} />
+                  </motion.div>
+                )}
+
+                {profileSection === "friends" && (
+                  <motion.div
+                    key="profile-friends"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="p-4"
+                  >
+                    <div className="flex items-center mb-4">
+                      <motion.button
+                        className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 mr-2"
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setProfileSection("main")}
+                      >
+                        <ChevronLeft size={20} />
+                      </motion.button>
+                      <h2 className="text-xl font-bold">Friend Management</h2>
+                    </div>
+                    
+                    <Friends user={user} onClose={() => setProfileSection("main")} />
+                  </motion.div>
+                )}
+
+                {profileSection === "privacy" && (
+                  <motion.div
+                    key="profile-privacy"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="p-4"
+                  >
+                    <div className="flex items-center mb-4">
+                      <motion.button
+                        className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 mr-2"
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setProfileSection("main")}
+                      >
+                        <ChevronLeft size={20} />
+                      </motion.button>
+                      <h2 className="text-xl font-bold">Privacy Settings</h2>
+                    </div>
+                    
+                    <Privacy onClose={() => setProfileSection("main")} />
+                  </motion.div>
+                )}
               </AnimatePresence>
             </motion.div>
           )}
@@ -556,6 +640,21 @@ const Home = ({ darkMode, setDarkMode }) => {
           ))}
         </div>
       </nav>
+
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {showSavedToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white py-2 px-4 rounded-full shadow-lg flex items-center space-x-2"
+          >
+            <Check size={16} />
+            <span>Changes saved successfully!</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

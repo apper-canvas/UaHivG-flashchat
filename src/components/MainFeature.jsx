@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, RefreshCcw, Smile, Download, Send, X, Image as ImageIcon } from "lucide-react";
+import { Camera, RefreshCcw, Smile, Download, Send, X, Image as ImageIcon, FlipHorizontal } from "lucide-react";
 
 const filters = [
   { id: "normal", name: "Normal", style: {} },
@@ -22,27 +22,80 @@ const MainFeature = () => {
   const [isSending, setIsSending] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showUploadOption, setShowUploadOption] = useState(false);
+  const [cameraError, setCameraError] = useState(null);
+  const [stream, setStream] = useState(null);
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   
-  // Simulated camera stream with placeholder
   useEffect(() => {
     if (capturedImage) return;
     
-    // In a real app, this would be getUserMedia to access the camera
-    const simulateCameraStream = () => {
+    let videoStream = null;
+    
+    const initCamera = async () => {
+      try {
+        // Stop any existing streams
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+        }
+        
+        // Set facing mode based on activeCamera state
+        const facingMode = activeCamera === "front" ? "user" : "environment";
+        
+        // Request camera access with the specified facing mode
+        const constraints = {
+          video: { 
+            facingMode,
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        };
+        
+        const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+        setStream(newStream);
+        
+        // Connect stream to video element
+        if (videoRef.current) {
+          videoRef.current.srcObject = newStream;
+          setCameraError(null);
+        }
+      } catch (err) {
+        console.error("Camera error:", err);
+        
+        // Handle different error types
+        if (err.name === "NotAllowedError") {
+          setCameraError("Camera permission denied. Please allow camera access to use this feature.");
+        } else if (err.name === "NotFoundError") {
+          // If requested camera is not available, try the other camera
+          if (activeCamera === "back") {
+            setActiveCamera("front");
+          } else {
+            setCameraError("No camera found on your device.");
+          }
+        } else {
+          setCameraError(`Camera error: ${err.message}`);
+        }
+        
+        // Use placeholder as fallback
+        usePlaceholderImage();
+      }
+    };
+    
+    // Fallback to placeholder if camera access fails
+    const usePlaceholderImage = () => {
       const placeholderImage = new Image();
       placeholderImage.src = "https://images.pexels.com/photos/1264210/pexels-photo-1264210.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1";
       
       placeholderImage.onload = () => {
-        if (videoRef.current) {
-          const ctx = videoRef.current.getContext('2d');
+        if (canvasRef.current) {
+          const ctx = canvasRef.current.getContext('2d');
           
           // Function to draw the image repeatedly to simulate video
           const drawImage = () => {
-            if (!videoRef.current) return;
-            ctx.drawImage(placeholderImage, 0, 0, videoRef.current.width, videoRef.current.height);
+            if (!canvasRef.current) return;
+            ctx.drawImage(placeholderImage, 0, 0, canvasRef.current.width, canvasRef.current.height);
             if (!capturedImage) {
               requestAnimationFrame(drawImage);
             }
@@ -53,18 +106,44 @@ const MainFeature = () => {
       };
     };
     
-    simulateCameraStream();
+    initCamera();
+    
+    // Clean up: stop camera stream when component unmounts or when capturing an image
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
   }, [capturedImage, activeCamera]);
   
   const captureImage = () => {
-    if (!videoRef.current) return;
+    if (!videoRef.current && !canvasRef.current) return;
     
     const canvas = document.createElement('canvas');
-    canvas.width = videoRef.current.width;
-    canvas.height = videoRef.current.height;
+    const videoElement = videoRef.current;
     
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(videoRef.current, 0, 0);
+    if (videoElement && videoElement.videoWidth) {
+      // Use video dimensions if available
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+      
+      const ctx = canvas.getContext('2d');
+      
+      // If front camera, flip the image horizontally
+      if (activeCamera === "front") {
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+      }
+      
+      ctx.drawImage(videoElement, 0, 0);
+    } else if (canvasRef.current) {
+      // Fallback to canvas placeholder
+      canvas.width = canvasRef.current.width;
+      canvas.height = canvasRef.current.height;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(canvasRef.current, 0, 0);
+    }
     
     setCapturedImage(canvas.toDataURL('image/jpeg'));
     setShowFilters(true);
@@ -115,13 +194,44 @@ const MainFeature = () => {
       <div className="camera-container flex-1 relative">
         {!capturedImage ? (
           <>
-            <canvas 
+            {/* Live camera feed */}
+            <video 
               ref={videoRef} 
-              width={375} 
-              height={667} 
-              className="w-full h-full object-cover"
+              autoPlay 
+              playsInline 
+              className={`w-full h-full object-cover ${activeCamera === "front" ? "scale-x-[-1]" : ""}`}
+              style={{ display: cameraError ? "none" : "block" }}
             />
+            
+            {/* Fallback canvas for placeholder or error states */}
+            {cameraError && (
+              <canvas 
+                ref={canvasRef} 
+                width={375} 
+                height={667} 
+                className="w-full h-full object-cover"
+              />
+            )}
+            
             <div className="camera-overlay"></div>
+            
+            {/* Camera error message */}
+            {cameraError && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="bg-black bg-opacity-70 p-4 rounded-lg max-w-xs text-center">
+                  <p className="text-white mb-3">{cameraError}</p>
+                  <button 
+                    className="btn btn-primary text-sm py-1"
+                    onClick={() => {
+                      setCameraError(null);
+                      setActiveCamera(activeCamera === "front" ? "back" : "front");
+                    }}
+                  >
+                    Try Again
+                  </button>
+                </div>
+              </div>
+            )}
             
             {/* Camera Controls */}
             <div className="absolute bottom-6 inset-x-0 flex justify-center items-center space-x-8">
@@ -140,12 +250,20 @@ const MainFeature = () => {
               />
               
               <motion.button
-                className="p-3 rounded-full bg-surface-200 bg-opacity-30 backdrop-blur-md"
+                className="p-3 rounded-full bg-surface-200 bg-opacity-30 backdrop-blur-md flex items-center justify-center"
                 whileTap={{ scale: 0.9 }}
                 onClick={switchCamera}
+                title={`Switch to ${activeCamera === "back" ? "front" : "back"} camera`}
               >
-                <RefreshCcw size={24} color="white" />
+                <FlipHorizontal size={24} color="white" />
               </motion.button>
+            </div>
+            
+            {/* Camera indicator */}
+            <div className="absolute top-4 left-4 bg-black bg-opacity-40 backdrop-blur-sm py-1 px-3 rounded-full">
+              <span className="text-white text-xs font-medium">
+                {activeCamera === "front" ? "Front Camera" : "Back Camera"}
+              </span>
             </div>
             
             {/* Upload Option */}

@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-bold;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 transform;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-surface-900 hover:bg-primary-dark shadow-md;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary text-white hover:bg-secondary-dark shadow-md;
+  }
+  
+  .btn-ghost {
+    @apply bg-transparent hover:bg-surface-200 dark:hover:bg-surface-800;
+  }
+  
+  .card {
+    @apply rounded-2xl bg-white dark:bg-surface-800 shadow-card overflow-hidden;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
+  }
+  
+  .bg-blur {
+    @apply backdrop-blur-md bg-white/30 dark:bg-surface-900/30;
+  }
+}
+
+/* Custom animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Custom styles for camera interface */
+.camera-container {
+  @apply relative overflow-hidden rounded-2xl aspect-[9/16] max-h-[80vh] mx-auto;
+  background: linear-gradient(135deg, #333, #111);
+}
+
+.camera-overlay {
+  @apply absolute inset-0 pointer-events-none;
+  background: radial-gradient(circle at center, transparent 60%, rgba(0,0,0,0.4) 100%);
+}
+
+.capture-button {
+  @apply w-16 h-16 rounded-full border-4 border-white relative;
+}
+
+.capture-button::before {
+  content: '';
+  @apply absolute inset-2 rounded-full bg-white opacity-80;
+}

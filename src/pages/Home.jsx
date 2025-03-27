@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Image, MessageCircle, Users, User, Settings, ChevronLeft } from "lucide-react";
+import { Camera, Image, MessageCircle, Users, User, Settings, ChevronLeft, LogOut, Edit, Save } from "lucide-react";
 import MainFeature from "../components/MainFeature";
+import ProfileEdit from "../components/ProfileEdit";
+import ProfileStats from "../components/ProfileStats";
+import ThemeSettings from "../components/ThemeSettings";
+import SavedContent from "../components/SavedContent";
 
-const Home = () => {
+const Home = ({ darkMode, setDarkMode }) => {
   const [activeTab, setActiveTab] = useState("camera");
   const [user, setUser] = useState({
     username: "flashuser",
@@ -26,6 +30,10 @@ const Home = () => {
     { id: "story4", username: "sam_wilson", avatar: "https://images.unsplash.com/photo-1527980965255-d3b416303d12?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80", hasUnviewed: false },
   ]);
 
+  // Profile section state
+  const [profileSection, setProfileSection] = useState("main"); // main, edit, stats, settings, saved
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
   const formatTime = (date) => {
     const now = new Date();
     const diffHours = Math.floor((now - date) / (1000 * 60 * 60));
@@ -33,6 +41,21 @@ const Home = () => {
     if (diffHours < 1) return "now";
     if (diffHours < 24) return `${diffHours}h`;
     return `${Math.floor(diffHours / 24)}d`;
+  };
+
+  const handleProfileUpdate = (updatedProfile) => {
+    setUser({
+      ...user,
+      ...updatedProfile
+    });
+    
+    // Update the story avatar as well
+    const updatedStories = stories.map(story => 
+      story.isYours ? { ...story, avatar: updatedProfile.avatar } : story
+    );
+    setStories(updatedStories);
+    
+    setProfileSection("main");
   };
 
   return (
@@ -233,51 +256,265 @@ const Home = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="h-full p-4"
+              className="h-full overflow-y-auto"
             >
-              <div className="flex flex-col items-center mb-6">
-                <motion.div 
-                  className="relative mb-4"
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <img 
-                    src={user.avatar} 
-                    alt="Profile" 
-                    className="w-24 h-24 rounded-full object-cover border-4 border-primary"
-                  />
-                  <div className="absolute bottom-0 right-0 bg-secondary text-white rounded-full w-8 h-8 flex items-center justify-center border-2 border-white dark:border-surface-800">
-                    <span className="text-sm">+</span>
-                  </div>
-                </motion.div>
-                <h2 className="text-xl font-bold">{user.displayName}</h2>
-                <p className="text-surface-500">@{user.username}</p>
-              </div>
+              <AnimatePresence mode="wait">
+                {profileSection === "main" && (
+                  <motion.div
+                    key="profile-main"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="p-4"
+                  >
+                    <div className="flex flex-col items-center mb-6">
+                      <motion.div 
+                        className="relative mb-4"
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        <img 
+                          src={user.avatar} 
+                          alt="Profile" 
+                          className="w-24 h-24 rounded-full object-cover border-4 border-primary"
+                        />
+                        <motion.div 
+                          className="absolute bottom-0 right-0 bg-secondary text-white rounded-full w-8 h-8 flex items-center justify-center border-2 border-white dark:border-surface-800"
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => setProfileSection("edit")}
+                        >
+                          <Edit size={16} />
+                        </motion.div>
+                      </motion.div>
+                      <h2 className="text-xl font-bold">{user.displayName}</h2>
+                      <p className="text-surface-500">@{user.username}</p>
+                    </div>
 
-              <div className="space-y-3">
-                <motion.div 
-                  className="p-4 bg-white dark:bg-surface-800 rounded-xl shadow-sm"
-                  whileHover={{ y: -2 }}
-                >
-                  <h3 className="font-semibold mb-2">My Stories</h3>
-                  <p className="text-sm text-surface-500">Create and manage your stories</p>
-                </motion.div>
-                
-                <motion.div 
-                  className="p-4 bg-white dark:bg-surface-800 rounded-xl shadow-sm"
-                  whileHover={{ y: -2 }}
-                >
-                  <h3 className="font-semibold mb-2">Friends</h3>
-                  <p className="text-sm text-surface-500">{user.friends.length} friends</p>
-                </motion.div>
-                
-                <motion.div 
-                  className="p-4 bg-white dark:bg-surface-800 rounded-xl shadow-sm"
-                  whileHover={{ y: -2 }}
-                >
-                  <h3 className="font-semibold mb-2">Settings</h3>
-                  <p className="text-sm text-surface-500">Privacy and app settings</p>
-                </motion.div>
-              </div>
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                      <motion.button
+                        className="bg-white dark:bg-surface-800 p-4 rounded-xl shadow-sm flex flex-col items-center"
+                        whileHover={{ y: -5 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setProfileSection("stats")}
+                      >
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                          <Users size={20} className="text-primary" />
+                        </div>
+                        <span className="font-medium text-sm">My Stats</span>
+                      </motion.button>
+                      
+                      <motion.button
+                        className="bg-white dark:bg-surface-800 p-4 rounded-xl shadow-sm flex flex-col items-center"
+                        whileHover={{ y: -5 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setProfileSection("saved")}
+                      >
+                        <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center mb-2">
+                          <Save size={20} className="text-secondary" />
+                        </div>
+                        <span className="font-medium text-sm">Saved Items</span>
+                      </motion.button>
+                      
+                      <motion.button
+                        className="bg-white dark:bg-surface-800 p-4 rounded-xl shadow-sm flex flex-col items-center"
+                        whileHover={{ y: -5 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setProfileSection("settings")}
+                      >
+                        <div className="w-10 h-10 rounded-full bg-surface-200 dark:bg-surface-700 flex items-center justify-center mb-2">
+                          <Settings size={20} />
+                        </div>
+                        <span className="font-medium text-sm">Appearance</span>
+                      </motion.button>
+                      
+                      <motion.button
+                        className="bg-white dark:bg-surface-800 p-4 rounded-xl shadow-sm flex flex-col items-center"
+                        whileHover={{ y: -5 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setShowLogoutConfirm(true)}
+                      >
+                        <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center mb-2">
+                          <LogOut size={20} className="text-red-500" />
+                        </div>
+                        <span className="font-medium text-sm">Sign Out</span>
+                      </motion.button>
+                    </div>
+
+                    <div className="space-y-3">
+                      <motion.div 
+                        className="p-4 bg-white dark:bg-surface-800 rounded-xl shadow-sm"
+                        whileHover={{ y: -2 }}
+                      >
+                        <h3 className="font-semibold mb-2">My Stories</h3>
+                        <p className="text-sm text-surface-500">Create and manage your stories</p>
+                      </motion.div>
+                      
+                      <motion.div 
+                        className="p-4 bg-white dark:bg-surface-800 rounded-xl shadow-sm"
+                        whileHover={{ y: -2 }}
+                      >
+                        <h3 className="font-semibold mb-2">Friends</h3>
+                        <p className="text-sm text-surface-500">{user.friends.length} friends</p>
+                      </motion.div>
+                      
+                      <motion.div 
+                        className="p-4 bg-white dark:bg-surface-800 rounded-xl shadow-sm"
+                        whileHover={{ y: -2 }}
+                      >
+                        <h3 className="font-semibold mb-2">Privacy</h3>
+                        <p className="text-sm text-surface-500">Manage your privacy settings</p>
+                      </motion.div>
+                    </div>
+
+                    {/* Logout Confirmation Modal */}
+                    <AnimatePresence>
+                      {showLogoutConfirm && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                          onClick={() => setShowLogoutConfirm(false)}
+                        >
+                          <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-white dark:bg-surface-800 rounded-xl p-5 max-w-xs w-full"
+                            onClick={e => e.stopPropagation()}
+                          >
+                            <h3 className="text-lg font-bold mb-2">Sign Out</h3>
+                            <p className="text-surface-600 dark:text-surface-300 mb-4">
+                              Are you sure you want to sign out from FlashChat?
+                            </p>
+                            <div className="flex space-x-2">
+                              <motion.button
+                                className="flex-1 py-2 px-4 bg-surface-100 dark:bg-surface-700 rounded-lg text-surface-700 dark:text-surface-300 font-medium"
+                                whileHover={{ scale: 1.03 }}
+                                whileTap={{ scale: 0.97 }}
+                                onClick={() => setShowLogoutConfirm(false)}
+                              >
+                                Cancel
+                              </motion.button>
+                              <motion.button
+                                className="flex-1 py-2 px-4 bg-red-500 rounded-lg text-white font-medium"
+                                whileHover={{ scale: 1.03 }}
+                                whileTap={{ scale: 0.97 }}
+                                onClick={() => {
+                                  // Handle logout here
+                                  setShowLogoutConfirm(false);
+                                  // For demo purposes, just show a toast message would be added
+                                }}
+                              >
+                                Sign Out
+                              </motion.button>
+                            </div>
+                          </motion.div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
+
+                {profileSection === "edit" && (
+                  <motion.div
+                    key="profile-edit"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="p-4"
+                  >
+                    <div className="flex items-center mb-4">
+                      <motion.button
+                        className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 mr-2"
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setProfileSection("main")}
+                      >
+                        <ChevronLeft size={20} />
+                      </motion.button>
+                      <h2 className="text-xl font-bold">Edit Profile</h2>
+                    </div>
+                    
+                    <ProfileEdit 
+                      user={user} 
+                      onSave={handleProfileUpdate} 
+                      onCancel={() => setProfileSection("main")} 
+                    />
+                  </motion.div>
+                )}
+
+                {profileSection === "stats" && (
+                  <motion.div
+                    key="profile-stats"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="p-4"
+                  >
+                    <div className="flex items-center mb-4">
+                      <motion.button
+                        className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 mr-2"
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setProfileSection("main")}
+                      >
+                        <ChevronLeft size={20} />
+                      </motion.button>
+                      <h2 className="text-xl font-bold">My Stats</h2>
+                    </div>
+                    
+                    <ProfileStats user={user} />
+                  </motion.div>
+                )}
+
+                {profileSection === "settings" && (
+                  <motion.div
+                    key="profile-settings"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="p-4"
+                  >
+                    <div className="flex items-center mb-4">
+                      <motion.button
+                        className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 mr-2"
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setProfileSection("main")}
+                      >
+                        <ChevronLeft size={20} />
+                      </motion.button>
+                      <h2 className="text-xl font-bold">Appearance</h2>
+                    </div>
+                    
+                    <ThemeSettings 
+                      darkMode={darkMode} 
+                      onChangeDarkMode={setDarkMode} 
+                      onClose={() => setProfileSection("main")} 
+                    />
+                  </motion.div>
+                )}
+
+                {profileSection === "saved" && (
+                  <motion.div
+                    key="profile-saved"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="p-4"
+                  >
+                    <div className="flex items-center mb-4">
+                      <motion.button
+                        className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 mr-2"
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setProfileSection("main")}
+                      >
+                        <ChevronLeft size={20} />
+                      </motion.button>
+                      <h2 className="text-xl font-bold">Saved Items</h2>
+                    </div>
+                    
+                    <SavedContent />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           )}
         </AnimatePresence>
@@ -296,7 +533,12 @@ const Home = () => {
             <motion.button
               key={tab.id}
               className={`p-2 rounded-full ${activeTab === tab.id ? 'text-primary' : 'text-surface-500'}`}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => {
+                setActiveTab(tab.id);
+                if (tab.id === "profile") {
+                  setProfileSection("main");
+                }
+              }}
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.9 }}
             >

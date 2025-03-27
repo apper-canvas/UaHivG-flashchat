@@ -36,7 +36,7 @@ function App() {
       </motion.button>
       
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Home darkMode={darkMode} setDarkMode={setDarkMode} />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </div>

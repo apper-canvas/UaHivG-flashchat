@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Lock, Eye, Globe, Users, UserX, Bell, AlertTriangle } from 'lucide-react';
+import { Shield, Lock, Eye, Globe, Users, UserX, Bell, AlertTriangle, Check } from 'lucide-react';
 
 const Privacy = ({ onClose }) => {
   const [settings, setSettings] = useState({
@@ -42,21 +42,21 @@ const Privacy = ({ onClose }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="bg-surface-50 dark:bg-surface-900 rounded-xl p-4 shadow-md max-w-2xl mx-auto overflow-y-auto max-h-[90vh]">
       <div className="flex items-center mb-4">
         <div className="p-2 rounded-full bg-primary/10 mr-3">
           <Shield size={20} className="text-primary" />
         </div>
-        <h3 className="text-lg font-semibold">Privacy Settings</h3>
+        <h3 className="text-lg font-semibold text-surface-800 dark:text-surface-100">Privacy Settings</h3>
       </div>
       
       {/* Story Privacy */}
-      <div className="bg-white dark:bg-surface-800 rounded-xl p-4 shadow-sm">
+      <div className="bg-white dark:bg-surface-800 rounded-xl p-4 shadow-sm mb-4">
         <div className="flex items-start">
           <Lock size={18} className="mt-1 mr-3 text-primary" />
           <div className="flex-1">
-            <h4 className="font-medium mb-2">Story Privacy</h4>
-            <p className="text-sm text-surface-500 mb-3">
+            <h4 className="font-medium mb-2 text-surface-800 dark:text-surface-100">Story Privacy</h4>
+            <p className="text-sm text-surface-500 dark:text-surface-400 mb-3">
               Control who can see your stories
             </p>
             
@@ -69,7 +69,7 @@ const Privacy = ({ onClose }) => {
                   onChange={() => handleRadioChange('storyPrivacy', 'private')}
                   className="mr-2"
                 />
-                <div className="flex items-center">
+                <div className="flex items-center text-surface-700 dark:text-surface-300">
                   <Eye size={14} className="mr-1" />
                   <span>Only me</span>
                 </div>
@@ -83,7 +83,7 @@ const Privacy = ({ onClose }) => {
                   onChange={() => handleRadioChange('storyPrivacy', 'friends')}
                   className="mr-2"
                 />
-                <div className="flex items-center">
+                <div className="flex items-center text-surface-700 dark:text-surface-300">
                   <Users size={14} className="mr-1" />
                   <span>Friends only</span>
                 </div>
@@ -97,7 +97,7 @@ const Privacy = ({ onClose }) => {
                   onChange={() => handleRadioChange('storyPrivacy', 'public')}
                   className="mr-2"
                 />
-                <div className="flex items-center">
+                <div className="flex items-center text-surface-700 dark:text-surface-300">
                   <Globe size={14} className="mr-1" />
                   <span>Everyone</span>
                 </div>
@@ -108,12 +108,12 @@ const Privacy = ({ onClose }) => {
       </div>
       
       {/* Profile Visibility */}
-      <div className="bg-white dark:bg-surface-800 rounded-xl p-4 shadow-sm">
+      <div className="bg-white dark:bg-surface-800 rounded-xl p-4 shadow-sm mb-4">
         <div className="flex items-start">
           <Eye size={18} className="mt-1 mr-3 text-secondary" />
           <div className="flex-1">
-            <h4 className="font-medium mb-2">Profile Visibility</h4>
-            <p className="text-sm text-surface-500 mb-3">
+            <h4 className="font-medium mb-2 text-surface-800 dark:text-surface-100">Profile Visibility</h4>
+            <p className="text-sm text-surface-500 dark:text-surface-400 mb-3">
               Control who can see your profile information
             </p>
             
@@ -126,7 +126,7 @@ const Privacy = ({ onClose }) => {
                   onChange={() => handleRadioChange('profileVisibility', 'friends')}
                   className="mr-2"
                 />
-                <div className="flex items-center">
+                <div className="flex items-center text-surface-700 dark:text-surface-300">
                   <Users size={14} className="mr-1" />
                   <span>Friends only</span>
                 </div>
@@ -140,7 +140,7 @@ const Privacy = ({ onClose }) => {
                   onChange={() => handleRadioChange('profileVisibility', 'everyone')}
                   className="mr-2"
                 />
-                <div className="flex items-center">
+                <div className="flex items-center text-surface-700 dark:text-surface-300">
                   <Globe size={14} className="mr-1" />
                   <span>Everyone</span>
                 </div>
@@ -151,14 +151,14 @@ const Privacy = ({ onClose }) => {
       </div>
       
       {/* Message Settings */}
-      <div className="bg-white dark:bg-surface-800 rounded-xl p-4 shadow-sm">
-        <h4 className="font-medium mb-3">Message Settings</h4>
+      <div className="bg-white dark:bg-surface-800 rounded-xl p-4 shadow-sm mb-4">
+        <h4 className="font-medium mb-3 text-surface-800 dark:text-surface-100">Message Settings</h4>
         
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <Bell size={16} className="mr-2 text-surface-500" />
-              <span className="text-sm">Notifications</span>
+              <span className="text-sm text-surface-700 dark:text-surface-300">Notifications</span>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input 
@@ -174,7 +174,7 @@ const Privacy = ({ onClose }) => {
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <Eye size={16} className="mr-2 text-surface-500" />
-              <span className="text-sm">Show last seen</span>
+              <span className="text-sm text-surface-700 dark:text-surface-300">Show last seen</span>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input 
@@ -190,7 +190,7 @@ const Privacy = ({ onClose }) => {
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <Check size={16} className="mr-2 text-surface-500" />
-              <span className="text-sm">Read receipts</span>
+              <span className="text-sm text-surface-700 dark:text-surface-300">Read receipts</span>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input 
@@ -206,14 +206,14 @@ const Privacy = ({ onClose }) => {
       </div>
       
       {/* Blocked Users */}
-      <div className="bg-white dark:bg-surface-800 rounded-xl p-4 shadow-sm">
+      <div className="bg-white dark:bg-surface-800 rounded-xl p-4 shadow-sm mb-4">
         <div className="flex items-center mb-3">
           <UserX size={16} className="mr-2 text-red-500" />
-          <h4 className="font-medium">Blocked Users</h4>
+          <h4 className="font-medium text-surface-800 dark:text-surface-100">Blocked Users</h4>
         </div>
         
         {settings.blockedUsers.length === 0 ? (
-          <p className="text-sm text-surface-500 py-2">You haven't blocked any users</p>
+          <p className="text-sm text-surface-500 dark:text-surface-400 py-2">You haven't blocked any users</p>
         ) : (
           <div className="space-y-2">
             {settings.blockedUsers.map(user => (
@@ -225,12 +225,12 @@ const Privacy = ({ onClose }) => {
                     className="w-8 h-8 rounded-full object-cover mr-2"
                   />
                   <div>
-                    <div className="text-sm font-medium">{user.displayName}</div>
-                    <div className="text-xs text-surface-500">@{user.username}</div>
+                    <div className="text-sm font-medium text-surface-800 dark:text-surface-100">{user.displayName}</div>
+                    <div className="text-xs text-surface-500 dark:text-surface-400">@{user.username}</div>
                   </div>
                 </div>
                 <motion.button
-                  className="text-xs py-1 px-2 bg-surface-200 dark:bg-surface-600 rounded-md"
+                  className="text-xs py-1 px-2 bg-surface-200 dark:bg-surface-600 rounded-md text-surface-700 dark:text-surface-200"
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleUnblock(user.id)}
                 >
@@ -252,7 +252,7 @@ const Privacy = ({ onClose }) => {
       </div>
       
       {/* Account Security Warning */}
-      <div className="bg-orange-50 dark:bg-orange-900/20 text-orange-800 dark:text-orange-200 rounded-xl p-4 shadow-sm">
+      <div className="bg-orange-50 dark:bg-orange-900/20 text-orange-800 dark:text-orange-200 rounded-xl p-4 shadow-sm mb-4">
         <div className="flex items-start">
           <AlertTriangle size={18} className="mt-0.5 mr-3 flex-shrink-0" />
           <div>
@@ -264,9 +264,17 @@ const Privacy = ({ onClose }) => {
         </div>
       </div>
       
-      <div className="text-center pt-2 pb-8">
+      <div className="flex justify-center pt-2 pb-4">
         <motion.button
-          className="btn btn-secondary px-6"
+          className="btn btn-secondary px-6 mr-3"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={onClose}
+        >
+          Cancel
+        </motion.button>
+        <motion.button
+          className="btn btn-primary px-6"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >

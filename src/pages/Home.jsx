@@ -10,6 +10,7 @@ import MyStories from "../components/MyStories";
 import Friends from "../components/Friends";
 import Privacy from "../components/Privacy";
 import ChatDetail from "../components/ChatDetail";
+import StoryViewer from "../components/StoryViewer";
 
 const Home = ({ darkMode, setDarkMode }) => {
   const [activeTab, setActiveTab] = useState("camera");
@@ -33,6 +34,9 @@ const Home = ({ darkMode, setDarkMode }) => {
     { id: "story3", username: "taylor89", avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80", hasUnviewed: true },
     { id: "story4", username: "sam_wilson", avatar: "https://images.unsplash.com/photo-1527980965255-d3b416303d12?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80", hasUnviewed: false },
   ]);
+
+  // Story viewer state
+  const [activeStory, setActiveStory] = useState(null);
 
   // Profile section state
   const [profileSection, setProfileSection] = useState("main"); // main, edit, stats, settings, saved, myStories, friends, privacy
@@ -93,13 +97,27 @@ const Home = ({ darkMode, setDarkMode }) => {
     // Handle keyboard interaction for stories
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      // Action would be handled here (view story or create new)
-      if (story.isYours) {
-        alert("Create a new story");
-      } else {
-        alert(`View ${story.username}'s story`);
-      }
+      handleViewStory(story);
     }
+  };
+
+  const handleViewStory = (story) => {
+    setActiveStory(story);
+    
+    // Mark story as viewed if it was unviewed
+    if (story.hasUnviewed) {
+      setStories(prevStories => 
+        prevStories.map(s => 
+          s.id === story.id ? { ...s, hasUnviewed: false } : s
+        )
+      );
+    }
+  };
+
+  const handleCreateNewStory = () => {
+    // Switch to camera tab and set up for story creation
+    setActiveTab("camera");
+    setActiveStory(null);
   };
 
   return (
@@ -168,6 +186,7 @@ const Home = ({ darkMode, setDarkMode }) => {
                         role="button"
                         aria-label={story.isYours ? "Create your story" : `View ${story.username}'s story`}
                         onKeyDown={(e) => handleStoryKeyDown(e, story)}
+                        onClick={() => handleViewStory(story)}
                         className="focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none rounded-full"
                       >
                         <img 
@@ -284,10 +303,11 @@ const Home = ({ darkMode, setDarkMode }) => {
                     tabIndex={0}
                     role="button"
                     aria-label={story.isYours ? "Your story" : `${story.username}'s story`}
+                    onClick={() => handleViewStory(story)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        // View story action
+                        handleViewStory(story);
                       }
                     }}
                   >
@@ -796,6 +816,17 @@ const Home = ({ darkMode, setDarkMode }) => {
             <Check size={16} aria-hidden="true" />
             <span>Changes saved successfully!</span>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Story Viewer */}
+      <AnimatePresence>
+        {activeStory && (
+          <StoryViewer 
+            story={activeStory} 
+            onClose={() => setActiveStory(null)} 
+            onCreateNewStory={handleCreateNewStory}
+          />
         )}
       </AnimatePresence>
     </div>

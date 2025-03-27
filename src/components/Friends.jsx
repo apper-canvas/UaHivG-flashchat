@@ -2,57 +2,22 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, UserPlus, BellRing, MessageCircle, UserMinus, Check, X } from 'lucide-react';
 import FriendRequests from './FriendRequests';
+import AddFriend from './AddFriend';
+import FriendChat from './FriendChat';
+import { useFriends } from '../contexts/FriendsContext';
 
-const Friends = ({ user, onClose }) => {
+const Friends = ({ onClose }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showFriendRequests, setShowFriendRequests] = useState(false);
-  const [friends, setFriends] = useState([
-    { 
-      id: 'friend1', 
-      username: 'alex_j', 
-      displayName: 'Alex Johnson',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80',
-      streak: 15,
-      lastActive: new Date(Date.now() - 1800000)
-    },
-    { 
-      id: 'friend2', 
-      username: 'taylor89', 
-      displayName: 'Taylor Swift',
-      avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80',
-      streak: 7,
-      lastActive: new Date(Date.now() - 3600000)
-    },
-    { 
-      id: 'friend3', 
-      username: 'sam_wilson', 
-      displayName: 'Sam Wilson',
-      avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80',
-      streak: 3,
-      lastActive: new Date(Date.now() - 86400000)
-    },
-  ]);
+  const [showAddFriend, setShowAddFriend] = useState(false);
   
-  const [pendingRequests] = useState({
-    incoming: [
-      {
-        id: 'req1',
-        username: 'jessica_alba',
-        displayName: 'Jessica Alba',
-        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80',
-        timeSent: new Date(Date.now() - 86400000 * 2)
-      }
-    ],
-    outgoing: [
-      {
-        id: 'req2',
-        username: 'john_smith',
-        displayName: 'John Smith',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80',
-        timeSent: new Date(Date.now() - 86400000)
-      }
-    ]
-  });
+  const { 
+    friends, 
+    pendingRequests, 
+    activeChat,
+    removeFriend, 
+    startChat 
+  } = useFriends();
   
   const formatLastActive = (date) => {
     const now = new Date();
@@ -69,7 +34,7 @@ const Friends = ({ user, onClose }) => {
   
   const handleRemoveFriend = (friendId) => {
     if (confirm('Are you sure you want to remove this friend?')) {
-      setFriends(friends.filter(friend => friend.id !== friendId));
+      removeFriend(friendId);
     }
   };
   
@@ -78,14 +43,19 @@ const Friends = ({ user, onClose }) => {
     friend.displayName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  if (activeChat) {
+    return <FriendChat friend={activeChat} />;
+  }
+
   return (
     <AnimatePresence mode="wait">
-      {showFriendRequests ? (
-        <FriendRequests 
-          pendingRequests={pendingRequests} 
-          onClose={() => setShowFriendRequests(false)} 
-        />
-      ) : (
+      {showFriendRequests && (
+        <FriendRequests onClose={() => setShowFriendRequests(false)} />
+      )}
+      {showAddFriend && (
+        <AddFriend onClose={() => setShowAddFriend(false)} />
+      )}
+      {!showFriendRequests && !showAddFriend && !activeChat && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -113,6 +83,7 @@ const Friends = ({ user, onClose }) => {
                 className="p-2 rounded-full bg-surface-100 dark:bg-surface-700"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
+                onClick={() => setShowAddFriend(true)}
               >
                 <UserPlus size={18} />
               </motion.button>
@@ -177,6 +148,7 @@ const Friends = ({ user, onClose }) => {
                       className="p-2 rounded-full bg-surface-100 dark:bg-surface-700"
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
+                      onClick={() => startChat(friend.id)}
                     >
                       <MessageCircle size={18} />
                     </motion.button>

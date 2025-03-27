@@ -1,7 +1,10 @@
 import { motion } from 'framer-motion';
 import { ChevronLeft, Clock, Check, X } from 'lucide-react';
+import { useFriends } from '../contexts/FriendsContext';
 
-const FriendRequests = ({ pendingRequests, onClose }) => {
+const FriendRequests = ({ onClose }) => {
+  const { pendingRequests, acceptFriendRequest, rejectFriendRequest } = useFriends();
+
   const formatTime = (date) => {
     const now = new Date();
     const diffHours = Math.floor((now - date) / (1000 * 60 * 60));
@@ -11,13 +14,11 @@ const FriendRequests = ({ pendingRequests, onClose }) => {
   };
 
   const handleAccept = (requestId) => {
-    // Accept friend request logic would go here
-    console.log(`Accepted request ${requestId}`);
+    acceptFriendRequest(requestId);
   };
 
-  const handleReject = (requestId) => {
-    // Reject friend request logic would go here
-    console.log(`Rejected request ${requestId}`);
+  const handleReject = (requestId, type = 'incoming') => {
+    rejectFriendRequest(requestId, type);
   };
 
   return (
@@ -121,7 +122,7 @@ const FriendRequests = ({ pendingRequests, onClose }) => {
                   className="p-2 rounded-full bg-red-100 dark:bg-red-900/30 text-red-500"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => handleReject(request.id)}
+                  onClick={() => handleReject(request.id, 'outgoing')}
                 >
                   <X size={18} />
                 </motion.button>

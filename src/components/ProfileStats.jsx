@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Fire, Calendar, Users, Eye, Award, Camera } from 'lucide-react';
+import { Flame, Calendar, Users, Eye, Award, Camera } from 'lucide-react';
 
 const ProfileStats = ({ user }) => {
   // Calculate total streaks
@@ -9,7 +9,7 @@ const ProfileStats = ({ user }) => {
   const stats = [
     { 
       id: 'streaks', 
-      icon: <Fire size={20} className="text-orange-500" />, 
+      icon: <Flame size={20} className="text-orange-500" />, 
       value: totalStreaks, 
       label: 'Total Streak Days' 
     },
@@ -71,7 +71,7 @@ const ProfileStats = ({ user }) => {
         whileHover={{ scale: 1.01 }}
       >
         <div className="p-2 bg-white dark:bg-surface-800 rounded-full mr-3">
-          <Fire size={20} className="text-primary" />
+          <Flame size={20} className="text-primary" />
         </div>
         <div>
           <h3 className="font-semibold text-sm">Keep Your Streaks Going!</h3>

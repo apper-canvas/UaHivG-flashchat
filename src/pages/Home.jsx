@@ -9,6 +9,7 @@ import SavedContent from "../components/SavedContent";
 import MyStories from "../components/MyStories";
 import Friends from "../components/Friends";
 import Privacy from "../components/Privacy";
+import ChatDetail from "../components/ChatDetail";
 
 const Home = ({ darkMode, setDarkMode }) => {
   const [activeTab, setActiveTab] = useState("camera");
@@ -37,6 +38,9 @@ const Home = ({ darkMode, setDarkMode }) => {
   const [profileSection, setProfileSection] = useState("main"); // main, edit, stats, settings, saved, myStories, friends, privacy
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showSavedToast, setShowSavedToast] = useState(false);
+
+  // Chat detail state
+  const [activeChat, setActiveChat] = useState(null);
 
   const formatTime = (date) => {
     const now = new Date();
@@ -68,6 +72,21 @@ const Home = ({ darkMode, setDarkMode }) => {
     setTimeout(() => {
       setShowSavedToast(false);
     }, 3000);
+  };
+
+  const handleUpdateLastMessage = (chatId, message, status = "delivered") => {
+    setChats(prevChats => 
+      prevChats.map(chat => 
+        chat.id === chatId 
+          ? { 
+              ...chat, 
+              lastMessage: message,
+              timestamp: new Date(),
+              status
+            } 
+          : chat
+      )
+    );
   };
 
   return (
@@ -110,7 +129,7 @@ const Home = ({ darkMode, setDarkMode }) => {
             </motion.div>
           )}
 
-          {activeTab === "chat" && (
+          {activeTab === "chat" && !activeChat && (
             <motion.div
               key="chat"
               initial={{ opacity: 0, x: 20 }}
@@ -157,6 +176,7 @@ const Home = ({ darkMode, setDarkMode }) => {
                     className="flex items-center p-3 rounded-xl mb-2 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
                     whileHover={{ x: 5 }}
                     whileTap={{ scale: 0.98 }}
+                    onClick={() => setActiveChat(chat)}
                   >
                     <img 
                       src={chat.avatar} 
@@ -181,10 +201,28 @@ const Home = ({ darkMode, setDarkMode }) => {
                         )}
                       </div>
                     </div>
-                    <div className="w-3 h-3 rounded-full ml-2 flex-shrink-0 bg-primary opacity-0"></div>
+                    {chat.status === "delivered" && (
+                      <div className="w-3 h-3 rounded-full ml-2 flex-shrink-0 bg-primary"></div>
+                    )}
                   </motion.div>
                 ))}
               </div>
+            </motion.div>
+          )}
+
+          {activeTab === "chat" && activeChat && (
+            <motion.div
+              key={`chat-detail-${activeChat.id}`}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="h-full"
+            >
+              <ChatDetail 
+                chat={activeChat} 
+                onBack={() => setActiveChat(null)}
+                onUpdateLastMessage={(message) => handleUpdateLastMessage(activeChat.id, message)}
+              />
             </motion.div>
           )}
 
@@ -621,6 +659,10 @@ const Home = ({ darkMode, setDarkMode }) => {
                 setActiveTab(tab.id);
                 if (tab.id === "profile") {
                   setProfileSection("main");
+                }
+                // Reset active chat when switching away from chat tab
+                if (tab.id !== "chat") {
+                  setActiveChat(null);
                 }
               }}
               whileHover={{ y: -2 }}

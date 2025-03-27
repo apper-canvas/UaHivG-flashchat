@@ -89,6 +89,19 @@ const Home = ({ darkMode, setDarkMode }) => {
     );
   };
 
+  const handleStoryKeyDown = (e, story) => {
+    // Handle keyboard interaction for stories
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      // Action would be handled here (view story or create new)
+      if (story.isYours) {
+        alert("Create a new story");
+      } else {
+        alert(`View ${story.username}'s story`);
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen max-h-screen overflow-hidden">
       {/* Header */}
@@ -106,8 +119,9 @@ const Home = ({ darkMode, setDarkMode }) => {
             </h1>
           </div>
           <motion.button 
-            className="p-2 rounded-full hover:bg-surface-100 dark:hover:bg-surface-700"
+            className="p-2 rounded-full hover:bg-surface-100 dark:hover:bg-surface-700 focus-visible:ring-2 focus-visible:ring-primary"
             whileTap={{ scale: 0.9 }}
+            aria-label="Settings"
           >
             <Settings size={20} />
           </motion.button>
@@ -139,28 +153,39 @@ const Home = ({ darkMode, setDarkMode }) => {
             >
               {/* Stories */}
               <div className="p-4 overflow-x-auto scrollbar-hide">
-                <div className="flex space-x-4">
+                <div className="flex space-x-4" role="list" aria-label="Stories">
                   {stories.map(story => (
                     <motion.div 
                       key={story.id} 
                       className="flex flex-col items-center"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
+                      role="listitem"
                     >
-                      <div className={`relative ${story.hasUnviewed ? 'p-0.5 bg-gradient-to-tr from-primary to-secondary rounded-full' : ''}`}>
+                      <div 
+                        className={`relative ${story.hasUnviewed ? 'p-0.5 bg-gradient-to-tr from-primary to-secondary rounded-full' : ''}`}
+                        tabIndex={0}
+                        role="button"
+                        aria-label={story.isYours ? "Create your story" : `View ${story.username}'s story`}
+                        onKeyDown={(e) => handleStoryKeyDown(e, story)}
+                        className="focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none rounded-full"
+                      >
                         <img 
                           src={story.avatar} 
-                          alt={story.username} 
+                          alt={story.isYours ? "Your profile picture" : `${story.username}'s profile picture`}
                           className="w-16 h-16 rounded-full object-cover border-2 border-white dark:border-surface-800"
                         />
                         {story.isYours && (
-                          <div className="absolute bottom-0 right-0 bg-secondary text-white rounded-full w-6 h-6 flex items-center justify-center border-2 border-white dark:border-surface-800">
+                          <div 
+                            className="absolute bottom-0 right-0 bg-secondary text-white rounded-full w-6 h-6 flex items-center justify-center border-2 border-white dark:border-surface-800"
+                            aria-hidden="true"
+                          >
                             <span className="text-xs">+</span>
                           </div>
                         )}
                       </div>
                       <span className="text-xs mt-1 truncate w-16 text-center">
-                        {story.username}
+                        {story.username === "your_story" ? "Your Story" : story.username}
                       </span>
                     </motion.div>
                   ))}
@@ -170,42 +195,56 @@ const Home = ({ darkMode, setDarkMode }) => {
               {/* Chat List */}
               <div className="flex-1 overflow-y-auto px-4 pb-4">
                 <h2 className="font-bold text-lg mb-2">Chats</h2>
-                {chats.map(chat => (
-                  <motion.div 
-                    key={chat.id}
-                    className="flex items-center p-3 rounded-xl mb-2 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
-                    whileHover={{ x: 5 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setActiveChat(chat)}
-                  >
-                    <img 
-                      src={chat.avatar} 
-                      alt={chat.username} 
-                      className="w-12 h-12 rounded-full object-cover mr-3"
-                    />
-                    <div className="flex-1">
-                      <div className="flex justify-between">
-                        <span className="font-semibold">{chat.username}</span>
-                        <span className="text-xs text-surface-500">{formatTime(chat.timestamp)}</span>
+                <div role="list" aria-label="Chat list">
+                  {chats.map(chat => (
+                    <motion.div 
+                      key={chat.id}
+                      className="flex items-center p-3 rounded-xl mb-2 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+                      whileHover={{ x: 5 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setActiveChat(chat)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setActiveChat(chat);
+                        }
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`Chat with ${chat.username}, last message: ${chat.lastMessage}, ${formatTime(chat.timestamp)}`}
+                    >
+                      <img 
+                        src={chat.avatar} 
+                        alt={`${chat.username}'s profile picture`}
+                        className="w-12 h-12 rounded-full object-cover mr-3"
+                      />
+                      <div className="flex-1">
+                        <div className="flex justify-between">
+                          <span className="font-semibold">{chat.username}</span>
+                          <span className="text-xs text-surface-500">{formatTime(chat.timestamp)}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className={`text-sm ${chat.status === 'opened' ? 'text-surface-500' : 'font-medium'}`}>
+                            {chat.lastMessage}
+                          </span>
+                          {chat.streak > 0 && (
+                            <div className="ml-2 flex items-center">
+                              <span className="text-xs bg-surface-200 dark:bg-surface-700 px-1.5 py-0.5 rounded-full">
+                                🔥 {chat.streak}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center">
-                        <span className={`text-sm ${chat.status === 'opened' ? 'text-surface-500' : 'font-medium'}`}>
-                          {chat.lastMessage}
-                        </span>
-                        {chat.streak > 0 && (
-                          <div className="ml-2 flex items-center">
-                            <span className="text-xs bg-surface-200 dark:bg-surface-700 px-1.5 py-0.5 rounded-full">
-                              🔥 {chat.streak}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    {chat.status === "delivered" && (
-                      <div className="w-3 h-3 rounded-full ml-2 flex-shrink-0 bg-primary"></div>
-                    )}
-                  </motion.div>
-                ))}
+                      {chat.status === "delivered" && (
+                        <div 
+                          className="w-3 h-3 rounded-full ml-2 flex-shrink-0 bg-primary"
+                          aria-label="New message" 
+                        ></div>
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
               </div>
             </motion.div>
           )}
@@ -235,22 +274,33 @@ const Home = ({ darkMode, setDarkMode }) => {
               className="h-full flex flex-col p-4"
             >
               <h2 className="font-bold text-xl mb-4">Stories</h2>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4" role="list" aria-label="Stories grid">
                 {stories.map(story => (
                   <motion.div
                     key={story.id}
-                    className="aspect-[3/4] rounded-xl overflow-hidden relative bg-gradient-to-br from-surface-700 to-surface-900"
+                    className="aspect-[3/4] rounded-xl overflow-hidden relative bg-gradient-to-br from-surface-700 to-surface-900 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={story.isYours ? "Your story" : `${story.username}'s story`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        // View story action
+                      }
+                    }}
                   >
-                    <div className="absolute inset-0 opacity-30 bg-gradient-to-t from-black to-transparent"></div>
+                    <div className="absolute inset-0 opacity-30 bg-gradient-to-t from-black to-transparent" aria-hidden="true"></div>
                     <div className="absolute bottom-0 left-0 p-3 flex items-center">
                       <img 
                         src={story.avatar} 
-                        alt={story.username} 
+                        alt={story.isYours ? "Your profile picture" : `${story.username}'s profile picture`}
                         className="w-8 h-8 rounded-full object-cover mr-2 border border-white"
                       />
-                      <span className="text-white text-sm font-medium">{story.username}</span>
+                      <span className="text-white text-sm font-medium">
+                        {story.username === "your_story" ? "Your Story" : story.username}
+                      </span>
                     </div>
                   </motion.div>
                 ))}
@@ -267,17 +317,19 @@ const Home = ({ darkMode, setDarkMode }) => {
               className="h-full p-4"
             >
               <h2 className="font-bold text-xl mb-4">Friends</h2>
-              <div className="space-y-4">
+              <div className="space-y-4" role="list" aria-label="Friends list">
                 {user.friends.map((friendId, index) => (
                   <motion.div 
                     key={friendId}
-                    className="flex items-center p-3 bg-white dark:bg-surface-800 rounded-xl shadow-sm"
+                    className="flex items-center p-3 bg-white dark:bg-surface-800 rounded-xl shadow-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
+                    tabIndex={0}
+                    role="listitem"
                   >
                     <img 
                       src={`https://images.unsplash.com/photo-${1580489944761 + index}-19a922579faa?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80`} 
-                      alt={friendId} 
+                      alt={`${friendId}'s profile picture`}
                       className="w-12 h-12 rounded-full object-cover mr-3"
                     />
                     <div className="flex-1">
@@ -289,8 +341,9 @@ const Home = ({ darkMode, setDarkMode }) => {
                       )}
                     </div>
                     <motion.button 
-                      className="p-2 rounded-full bg-surface-100 dark:bg-surface-700"
+                      className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 focus-visible:ring-2 focus-visible:ring-primary"
                       whileTap={{ scale: 0.9 }}
+                      aria-label={`Message ${friendId}`}
                     >
                       <MessageCircle size={18} />
                     </motion.button>
@@ -324,16 +377,17 @@ const Home = ({ darkMode, setDarkMode }) => {
                       >
                         <img 
                           src={user.avatar} 
-                          alt="Profile" 
+                          alt="Your profile picture" 
                           className="w-24 h-24 rounded-full object-cover border-4 border-primary"
                         />
-                        <motion.div 
-                          className="absolute bottom-0 right-0 bg-secondary text-white rounded-full w-8 h-8 flex items-center justify-center border-2 border-white dark:border-surface-800"
+                        <motion.button 
+                          className="absolute bottom-0 right-0 bg-secondary text-white rounded-full w-8 h-8 flex items-center justify-center border-2 border-white dark:border-surface-800 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                           whileTap={{ scale: 0.9 }}
                           onClick={() => setProfileSection("edit")}
+                          aria-label="Edit profile"
                         >
                           <Edit size={16} />
-                        </motion.div>
+                        </motion.button>
                       </motion.div>
                       <h2 className="text-xl font-bold">{user.displayName}</h2>
                       <p className="text-surface-500">@{user.username}</p>
@@ -341,10 +395,11 @@ const Home = ({ darkMode, setDarkMode }) => {
 
                     <div className="grid grid-cols-2 gap-3 mb-6">
                       <motion.button
-                        className="bg-white dark:bg-surface-800 p-4 rounded-xl shadow-sm flex flex-col items-center"
+                        className="bg-white dark:bg-surface-800 p-4 rounded-xl shadow-sm flex flex-col items-center focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                         whileHover={{ y: -5 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setProfileSection("stats")}
+                        aria-label="View your stats"
                       >
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
                           <Users size={20} className="text-primary" />
@@ -353,10 +408,11 @@ const Home = ({ darkMode, setDarkMode }) => {
                       </motion.button>
                       
                       <motion.button
-                        className="bg-white dark:bg-surface-800 p-4 rounded-xl shadow-sm flex flex-col items-center"
+                        className="bg-white dark:bg-surface-800 p-4 rounded-xl shadow-sm flex flex-col items-center focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                         whileHover={{ y: -5 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setProfileSection("saved")}
+                        aria-label="View saved items"
                       >
                         <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center mb-2">
                           <Save size={20} className="text-secondary" />
@@ -365,10 +421,11 @@ const Home = ({ darkMode, setDarkMode }) => {
                       </motion.button>
                       
                       <motion.button
-                        className="bg-white dark:bg-surface-800 p-4 rounded-xl shadow-sm flex flex-col items-center"
+                        className="bg-white dark:bg-surface-800 p-4 rounded-xl shadow-sm flex flex-col items-center focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                         whileHover={{ y: -5 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setProfileSection("settings")}
+                        aria-label="Change appearance settings"
                       >
                         <div className="w-10 h-10 rounded-full bg-surface-200 dark:bg-surface-700 flex items-center justify-center mb-2">
                           <Settings size={20} />
@@ -377,10 +434,11 @@ const Home = ({ darkMode, setDarkMode }) => {
                       </motion.button>
                       
                       <motion.button
-                        className="bg-white dark:bg-surface-800 p-4 rounded-xl shadow-sm flex flex-col items-center"
+                        className="bg-white dark:bg-surface-800 p-4 rounded-xl shadow-sm flex flex-col items-center focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                         whileHover={{ y: -5 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setShowLogoutConfirm(true)}
+                        aria-label="Sign out of your account"
                       >
                         <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center mb-2">
                           <LogOut size={20} className="text-red-500" />
@@ -391,27 +449,54 @@ const Home = ({ darkMode, setDarkMode }) => {
 
                     <div className="space-y-3">
                       <motion.div 
-                        className="p-4 bg-white dark:bg-surface-800 rounded-xl shadow-sm"
+                        className="p-4 bg-white dark:bg-surface-800 rounded-xl shadow-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                         whileHover={{ y: -2 }}
                         onClick={() => setProfileSection("myStories")}
+                        tabIndex={0}
+                        role="button"
+                        aria-label="Manage your stories"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setProfileSection("myStories");
+                          }
+                        }}
                       >
                         <h3 className="font-semibold mb-2">My Stories</h3>
                         <p className="text-sm text-surface-500">Create and manage your stories</p>
                       </motion.div>
                       
                       <motion.div 
-                        className="p-4 bg-white dark:bg-surface-800 rounded-xl shadow-sm"
+                        className="p-4 bg-white dark:bg-surface-800 rounded-xl shadow-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                         whileHover={{ y: -2 }}
                         onClick={() => setProfileSection("friends")}
+                        tabIndex={0}
+                        role="button"
+                        aria-label="Manage your friends"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setProfileSection("friends");
+                          }
+                        }}
                       >
                         <h3 className="font-semibold mb-2">Friends</h3>
                         <p className="text-sm text-surface-500">{user.friends.length} friends</p>
                       </motion.div>
                       
                       <motion.div 
-                        className="p-4 bg-white dark:bg-surface-800 rounded-xl shadow-sm"
+                        className="p-4 bg-white dark:bg-surface-800 rounded-xl shadow-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                         whileHover={{ y: -2 }}
                         onClick={() => setProfileSection("privacy")}
+                        tabIndex={0}
+                        role="button"
+                        aria-label="Manage privacy settings"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setProfileSection("privacy");
+                          }
+                        }}
                       >
                         <h3 className="font-semibold mb-2">Privacy</h3>
                         <p className="text-sm text-surface-500">Manage your privacy settings</p>
@@ -427,6 +512,9 @@ const Home = ({ darkMode, setDarkMode }) => {
                           exit={{ opacity: 0 }}
                           className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
                           onClick={() => setShowLogoutConfirm(false)}
+                          role="dialog"
+                          aria-modal="true"
+                          aria-labelledby="logout-title"
                         >
                           <motion.div
                             initial={{ scale: 0.9, opacity: 0 }}
@@ -435,13 +523,13 @@ const Home = ({ darkMode, setDarkMode }) => {
                             className="bg-white dark:bg-surface-800 rounded-xl p-5 max-w-xs w-full"
                             onClick={e => e.stopPropagation()}
                           >
-                            <h3 className="text-lg font-bold mb-2">Sign Out</h3>
+                            <h3 className="text-lg font-bold mb-2" id="logout-title">Sign Out</h3>
                             <p className="text-surface-600 dark:text-surface-300 mb-4">
                               Are you sure you want to sign out from FlashChat?
                             </p>
                             <div className="flex space-x-2">
                               <motion.button
-                                className="flex-1 py-2 px-4 bg-surface-100 dark:bg-surface-700 rounded-lg text-surface-700 dark:text-surface-300 font-medium"
+                                className="flex-1 py-2 px-4 bg-surface-100 dark:bg-surface-700 rounded-lg text-surface-700 dark:text-surface-300 font-medium focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                                 whileHover={{ scale: 1.03 }}
                                 whileTap={{ scale: 0.97 }}
                                 onClick={() => setShowLogoutConfirm(false)}
@@ -449,7 +537,7 @@ const Home = ({ darkMode, setDarkMode }) => {
                                 Cancel
                               </motion.button>
                               <motion.button
-                                className="flex-1 py-2 px-4 bg-red-500 rounded-lg text-white font-medium"
+                                className="flex-1 py-2 px-4 bg-red-500 rounded-lg text-white font-medium focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
                                 whileHover={{ scale: 1.03 }}
                                 whileTap={{ scale: 0.97 }}
                                 onClick={() => {
@@ -478,9 +566,10 @@ const Home = ({ darkMode, setDarkMode }) => {
                   >
                     <div className="flex items-center mb-4">
                       <motion.button
-                        className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 mr-2"
+                        className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 mr-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setProfileSection("main")}
+                        aria-label="Go back to profile"
                       >
                         <ChevronLeft size={20} />
                       </motion.button>
@@ -505,9 +594,10 @@ const Home = ({ darkMode, setDarkMode }) => {
                   >
                     <div className="flex items-center mb-4">
                       <motion.button
-                        className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 mr-2"
+                        className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 mr-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setProfileSection("main")}
+                        aria-label="Go back to profile"
                       >
                         <ChevronLeft size={20} />
                       </motion.button>
@@ -528,9 +618,10 @@ const Home = ({ darkMode, setDarkMode }) => {
                   >
                     <div className="flex items-center mb-4">
                       <motion.button
-                        className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 mr-2"
+                        className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 mr-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setProfileSection("main")}
+                        aria-label="Go back to profile"
                       >
                         <ChevronLeft size={20} />
                       </motion.button>
@@ -555,9 +646,10 @@ const Home = ({ darkMode, setDarkMode }) => {
                   >
                     <div className="flex items-center mb-4">
                       <motion.button
-                        className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 mr-2"
+                        className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 mr-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setProfileSection("main")}
+                        aria-label="Go back to profile"
                       >
                         <ChevronLeft size={20} />
                       </motion.button>
@@ -578,9 +670,10 @@ const Home = ({ darkMode, setDarkMode }) => {
                   >
                     <div className="flex items-center mb-4">
                       <motion.button
-                        className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 mr-2"
+                        className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 mr-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setProfileSection("main")}
+                        aria-label="Go back to profile"
                       >
                         <ChevronLeft size={20} />
                       </motion.button>
@@ -601,9 +694,10 @@ const Home = ({ darkMode, setDarkMode }) => {
                   >
                     <div className="flex items-center mb-4">
                       <motion.button
-                        className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 mr-2"
+                        className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 mr-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setProfileSection("main")}
+                        aria-label="Go back to profile"
                       >
                         <ChevronLeft size={20} />
                       </motion.button>
@@ -624,9 +718,10 @@ const Home = ({ darkMode, setDarkMode }) => {
                   >
                     <div className="flex items-center mb-4">
                       <motion.button
-                        className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 mr-2"
+                        className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 mr-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setProfileSection("main")}
+                        aria-label="Go back to profile"
                       >
                         <ChevronLeft size={20} />
                       </motion.button>
@@ -643,18 +738,18 @@ const Home = ({ darkMode, setDarkMode }) => {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="bg-white dark:bg-surface-800 shadow-lg rounded-t-xl">
+      <nav className="bg-white dark:bg-surface-800 shadow-lg rounded-t-xl" aria-label="Main navigation">
         <div className="flex justify-around py-3">
           {[
-            { id: "chat", icon: <MessageCircle size={24} /> },
-            { id: "stories", icon: <Image size={24} /> },
-            { id: "camera", icon: <Camera size={24} /> },
-            { id: "friends", icon: <Users size={24} /> },
-            { id: "profile", icon: <User size={24} /> }
+            { id: "chat", icon: <MessageCircle size={24} />, label: "Messages" },
+            { id: "stories", icon: <Image size={24} />, label: "Stories" },
+            { id: "camera", icon: <Camera size={24} />, label: "Camera" },
+            { id: "friends", icon: <Users size={24} />, label: "Friends" },
+            { id: "profile", icon: <User size={24} />, label: "Profile" }
           ].map(tab => (
             <motion.button
               key={tab.id}
-              className={`p-2 rounded-full ${activeTab === tab.id ? 'text-primary' : 'text-surface-500'}`}
+              className={`p-2 rounded-full ${activeTab === tab.id ? 'text-primary' : 'text-surface-500'} focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none`}
               onClick={() => {
                 setActiveTab(tab.id);
                 if (tab.id === "profile") {
@@ -667,8 +762,11 @@ const Home = ({ darkMode, setDarkMode }) => {
               }}
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.9 }}
+              aria-label={tab.label}
+              aria-current={activeTab === tab.id ? "page" : undefined}
             >
               {tab.icon}
+              <span className="sr-only">{tab.label}</span>
               {activeTab === tab.id && (
                 <motion.div
                   className="absolute bottom-1 left-1/2 w-1 h-1 bg-primary rounded-full"
@@ -676,6 +774,7 @@ const Home = ({ darkMode, setDarkMode }) => {
                   initial={false}
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   style={{ x: "-50%" }}
+                  aria-hidden="true"
                 />
               )}
             </motion.button>
@@ -691,8 +790,10 @@ const Home = ({ darkMode, setDarkMode }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
             className="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white py-2 px-4 rounded-full shadow-lg flex items-center space-x-2"
+            role="alert"
+            aria-live="polite"
           >
-            <Check size={16} />
+            <Check size={16} aria-hidden="true" />
             <span>Changes saved successfully!</span>
           </motion.div>
         )}
